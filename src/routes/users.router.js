@@ -12,35 +12,39 @@ const router = express.Router();
 // 4. **UserInfos** 테이블에 `name`, `age`, `gender`, `profileImage`를 이용해 사용자 정보를 생성합니다.
 
 router.post('/sign-up', async (req, res, next) => {
-  const { email, password, name, age, gender, profileImage } = req.body;
+  try {
+    const { email, password, name, age, gender, profileImage } = req.body;
 
-  const isExistUser = await prisma.users.findFirst({
-    where: { email },
-  });
-  if (isExistUser) {
-    return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+    const isExistUser = await prisma.users.findFirst({
+      where: { email },
+    });
+    if (isExistUser) {
+      return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
+    }
+
+    // bcrpyt 사용해 암호화
+    const hashedPassword = await bcrpyt.hash(password, 10);
+    const user = await prisma.users.create({
+      data: {
+        email,
+        password: hashedPassword, // 비밀번호를 암호화해서 저장
+      },
+    });
+
+    const userInfo = await prisma.userInfos.create({
+      data: {
+        userId: user.userId,
+        name,
+        age,
+        gender,
+        profileImage,
+      },
+    });
+
+    return res.status(201).json({ message: '회원가입이 완료되었습니다.' });
+  } catch (err) {
+    next(err);
   }
-
-  // bcrpyt 사용해 암호화
-  const hashedPassword = await bcrpyt.hash(password, 10);
-  const user = await prisma.users.create({
-    data: {
-      email,
-      password: hashedPassword, // 비밀번호를 암호화해서 저장
-    },
-  });
-
-  const userInfo = await prisma.userInfos.create({
-    data: {
-      userId: user.userId,
-      name,
-      age,
-      gender,
-      profileImage,
-    },
-  });
-
-  return res.status(201).json({ message: '회원가입이 완료되었습니다.' });
 });
 
 // 1. `email`, `password`를 **body**로 전달받습니다.
