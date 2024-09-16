@@ -17,6 +17,7 @@ model Users {
   userInfos UserInfos? // 사용자(Users) 테이블과 사용자 정보(UserInfos) 테이블이 1:1 관계를 맺습니다.
   posts     Posts[] // 사용자(Users) 테이블과 게시글(Posts) 테이블이 1:N 관계를 맺습니다.
   comments  Comments[] // 사용자(Users) 테이블과 댓글(Comments) 테이블이 1:N 관계를 맺습니다.
+  userHistories UserHistories[] // 사용자 테이블과 히스토 테이블이 1:N 관계
 
   @@map("Users")
 }
@@ -66,4 +67,18 @@ model Comments {
   user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@map("Comments")
+}
+
+model UserHistories {
+  userHistoryId String   @id @default(uuid()) @map("userHistoryId") // 범용 고유 식별자, 로그 테이블에서 createdAt, updatedAt과 같은 컬럼을 동시에 사용하는 것 보다 하나의 컬럼을 사용해 최소화하는데 효율적이다
+  userId        Int      @map("userId") // 사용자(Users) 테이블을 참조하는 외래키
+  changedField  String   @map("changedField") // 변경된 필드명
+  oldValue      String?  @map("oldValue") // 변경 전 값
+  newValue      String   @map("newValue") // 변경 후 값
+  changedAt     DateTime @default(now()) @map("changedAt")
+
+  // Users 테이블과 관계를 설정합니다.
+  user Users @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("UserHistories")
 }
