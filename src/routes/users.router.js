@@ -1,6 +1,6 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
-import bcrpyt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import authMiddleware from '../middlewares/auth.middleware.js';
 import { Prisma } from '@prisma/client';
@@ -23,8 +23,8 @@ router.post('/sign-up', async (req, res, next) => {
       return res.status(409).json({ message: '이미 존재하는 이메일입니다.' });
     }
 
-    // bcrpyt 사용해 암호화
-    const hashedPassword = await bcrpyt.hash(password, 10);
+    // bcrypt 사용해 암호화
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // 트랜잭션 사용
     const [user, userInfo] = await prisma.$transaction(
@@ -72,7 +72,7 @@ router.post('/sign-in', async (req, res, next) => {
 
   if (!user)
     return res.status(401).json({ message: '존재하지 않는 이메일입니다.' });
-  if (!(await bcrpyt.compare(password, user.password)))
+  if (!(await bcrypt.compare(password, user.password)))
     return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
 
   req.session.userId = user.userId;
